@@ -24,10 +24,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import org.apache.commons.lang3.StringUtils;
-import com.recom.domain.Course;
 import com.recom.model.CourseModel;
-import com.recom.model.UserModel;
-import com.recom.services.RecomCourseService;
 
 @Service
 public class RecomCourseService {

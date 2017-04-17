@@ -34,7 +34,7 @@ public class RecomCourseController {
 		JsonAndView jv = new JsonAndView();
          if(userId != 0){
          	//手动调用推荐算法
-         	//recomCourseService.recomScheduled();
+         	// recomCourseService.recomScheduled();
         	 List<CourseModel> recompredic = recomCourseService.getUserRecomCourse(userId);
         	 if(recompredic.size() != 0){
 				 List<CourseModel> recom = recomCourseService.getUserRecomCourse(userId);
