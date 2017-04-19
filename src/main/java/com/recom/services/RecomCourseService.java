@@ -75,7 +75,7 @@ public class RecomCourseService {
 								//优化Tips：如果用户量比较多的话。这里可以批量写入推荐结果，注意多线程同步
 								recomCourseDao.replaceIntoUserRecom(userId, recomItems,now);
 								/*转换成原来的数据源*/
-								DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_cernet);
+								//DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_cernet);
 							} catch (Exception e) {
 								e.printStackTrace();
 							}

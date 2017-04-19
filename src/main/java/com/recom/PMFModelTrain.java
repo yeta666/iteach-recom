@@ -9,6 +9,8 @@ import java.util.Random;
 
 import com.recom.dao.RecomCourseDao;
 import com.recom.domain.UserRate;
+import com.recom.utils.DatabaseContextHolder;
+import com.recom.utils.DatabaseType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ujmp.core.DenseMatrix;
@@ -53,8 +55,8 @@ public class PMFModelTrain {
 	//index與id不一致時快查表
 	//private Map<Integer,Integer> userIdMap = Maps.newHashMapWithExpectedSize(1000);
 	private Map<Integer,Integer> itemIdMap = Maps.newHashMapWithExpectedSize(1000);
-		
-	private PMFModelTrain(){}
+	/*选择数据源，当前类初始调用iteach_recom数据库*/
+	private PMFModelTrain(){DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_cernet);}
 	public PMFModelTrain(RecomCourseDao RecomCourseDao,int featureCount,double regularizer,int maxIt){
 		this.recomCourseDao = RecomCourseDao;
 		this.featureCount = featureCount;
@@ -79,6 +81,7 @@ public class PMFModelTrain {
 		
 		int index = 1;
 		for (int page = 1; page <= tp; page++) {
+			DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_cernet);
 			List<Integer> users = recomCourseDao.getUsersByBatch(page, pageSize);
 			for (int i = 0; i < users.size();index++, i++) {
 				if(users.get(i)!=index){
@@ -127,19 +130,23 @@ public class PMFModelTrain {
 	}
 	//批量载入训练集合
 	private List<UserRate> loadTrainSetByPage(int currentPage, int pageSize){
+		DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_recom);
 		return recomCourseDao.getUserRateByBatch(currentPage, pageSize);
+
 	}
 	
 	private void intialData(){
 		/*************************************************************************************/
 		//bug
 		//数据库里面没有数据的时候，赋值就为null
+		DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_cernet);
 		userCount = recomCourseDao.getUserCount();
 		itemCount = recomCourseDao.getCourseCount();
+		DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_recom);
 		rateCount = recomCourseDao.getRateSize();
 
 		meanRating = recomCourseDao.getMeanRate();
-
+		DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_cernet);
 		System.out.println("userCount="+userCount+",itemCount="+itemCount
 				+",rateCount="+rateCount+",meanRate="+meanRating);
 		this.offset = meanRating;
@@ -266,7 +273,9 @@ public class PMFModelTrain {
 			throw new Exception("build model has not finish! please wait a letter");
 		}
 		int userIndex = this.userId2Index(userId);
+		DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_recom);
 		List<Integer> hasRateItems = recomCourseDao.getUserRateItemIds(userId);
+		DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_cernet);
 		BitSet ratedRateSet = new BitSet(100000);//
 		for (int i = 0; i < hasRateItems.size(); i++) {
 			ratedRateSet.set(this.itemId2Index(hasRateItems.get(i)));
