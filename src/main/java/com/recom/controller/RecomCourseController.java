@@ -32,7 +32,7 @@ public class RecomCourseController {
 		* userId从前端传过来
 		* */
 		JsonAndView jv = new JsonAndView();
-         if(userId != 0){
+		if(userId != 0){
          	//手动调用推荐算法
          	//recomCourseService.recomScheduled();
         	 List<CourseModel> recompredic = recomCourseService.getUserRecomCourse(userId);

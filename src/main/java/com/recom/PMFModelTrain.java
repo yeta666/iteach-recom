@@ -144,7 +144,7 @@ public class PMFModelTrain {
 		itemCount = recomCourseDao.getCourseCount();
 		DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_recom);
 		rateCount = recomCourseDao.getRateSize();
-
+		//获取平均评分
 		meanRating = recomCourseDao.getMeanRate();
 		DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_cernet);
 		System.out.println("userCount="+userCount+",itemCount="+itemCount
