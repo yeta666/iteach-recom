@@ -160,13 +160,15 @@ public class PMFModelTrain {
 	 * 初始化特徵矩陣
 	 */
 	private void intialFeatrueVector(){
-		userFeatures = DenseMatrix.Factory.zeros(userCount+1, featureCount);  //创建userCount+1*featureCount的矩阵
+		userFeatures = DenseMatrix.Factory.zeros(userCount+1, featureCount);  //创建userCount+1*featureCount的零矩阵
 		itemFeatures = DenseMatrix.Factory.zeros(featureCount,itemCount+1);
 		
 		// Initialize with random values:
 		for (int f = 0; f < featureCount; f++) {
 			for (int u = 1; u <= userCount; u++) {
 				//MathUtil.nextGaussian();
+				//setAsDouble设置矩阵userFeatures第u+1行第f+1列的元素为
+				//Distribution.normalRandom(正态分布均值,正态分布的标准差),返回从给定分布随机抽取样本
 				userFeatures.setAsDouble(0.1 * Distribution.normalRandom(0, 1),u, f);
 			}
 			for (int i = 1; i <= itemCount; i++) {
@@ -180,6 +182,7 @@ public class PMFModelTrain {
 		this.intialData();
 		this.buildIndexMap();
 		this.intialFeatrueVector();
+		/*System.currentTimeMillis()产生一个当前的毫秒*/
 		long s = System.currentTimeMillis();
 		this.train();
 		long e = System.currentTimeMillis();
@@ -201,7 +204,7 @@ public class PMFModelTrain {
 		double prevErr = 99999;
 		double currErr = 9999;
 
-		// Iteration:
+		// Iteration（迭代）:
 		while (prevErr > currErr && round < maxIter) {
 			double errSum = 0.0;
 			Matrix userDelta = DenseMatrix.Factory.zeros(userCount+1,featureCount);
@@ -213,30 +216,32 @@ public class PMFModelTrain {
 					double realRating = userRate.getRate()- meanRating;
 					int userIndex = this.userId2Index(userRate.getUser());
 					int itemIndex = this.itemId2Index(userRate.getCourse());
-
+                      //选取userIndex这一行
 					Matrix userRow = userFeatures.selectRows(Ret.LINK, userIndex);
-
+					//选取itemIndex这一列
 					Matrix itemCol = itemFeatures.selectColumns(Ret.LINK,itemIndex);
 					double prediction =userRow.mtimes(Ret.NEW, true, 
 							itemCol).getAsDouble(0,0);
 					double userRowSum = userRow.getValueSum();
+					// getValueSum将矩阵的所有数值相加得到的返回值
 					double itemColSum = itemCol.getValueSum();
 					double err = Math.pow(prediction - realRating, 2) + 0.5 * regularizer * (Math.pow(userRowSum, 2) + Math.pow(itemColSum, 2));
 					errSum += err;
 					
-					// Compute gradients:
+					// Compute gradients:（计算梯度）
 					double repmatValue = 2 * (prediction - realRating);
 					for (int f = 0; f < featureCount; f++) {
+						//获取在用户特征矩阵当前评分下的用户ID+1这一行，f+1列这一元素,更新User i 和Item j 的因子向量
 						double tmpU = userFeatures.getAsDouble(userIndex, f);
 						double tmpI = itemFeatures.getAsDouble(f, itemIndex);
 						double Ix_p = repmatValue * tmpI + regularizer * tmpU;
 						double Ix_m = repmatValue * tmpU + regularizer * tmpI;
-						
+						//更新User i 和Item j 的偏差
 						userDelta.setAsDouble(userDelta.getAsDouble(userIndex, f) + Ix_p,userIndex, f);
 						itemDelta.setAsDouble(itemDelta.getAsDouble(f, itemIndex) + Ix_m,f, itemIndex);
 					}
-				}
-			}
+				}/*for (UserRate userRate: trainData) end*/
+			}/*分页循环end*/
 			
 			// Update user and item features:
 			//userFeaturesInc = userFeaturesInc.scale(momentum).plus(userDelta.scale(learningRate / rateCount));
@@ -276,11 +281,12 @@ public class PMFModelTrain {
 		DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_recom);
 		List<Integer> hasRateItems = recomCourseDao.getUserRateItemIds(userId);
 		DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_cernet);
+		//BitSet 类创建一个特殊类型的数组保存位值。该BitSet中数组的大小可以根据需要增加。这使得它类似于比特的向量
 		BitSet ratedRateSet = new BitSet(100000);//
 		for (int i = 0; i < hasRateItems.size(); i++) {
 			ratedRateSet.set(this.itemId2Index(hasRateItems.get(i)));
 		}
-		
+		//自己实现的一个固定大小的优先队列，方便排序取最大的K个元素
 		FixSizedPriorityQueue<Entriy> recomQueue = new FixSizedPriorityQueue<Entriy>(topK);
 		for (int item = 1; item <= itemCount; item++) {
 			if(ratedRateSet.get(item)){
