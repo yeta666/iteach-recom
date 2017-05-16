@@ -15,7 +15,6 @@ import com.recom.dao.CourseDAO;
 public class CourseService {
 
 	final Logger logger = LoggerFactory.getLogger(getClass());
-
 	@Resource
 	private CourseDAO courseDAO;
 	@Autowired
