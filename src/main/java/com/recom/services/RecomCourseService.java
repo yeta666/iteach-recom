@@ -48,7 +48,10 @@ public class RecomCourseService {
 
 	@Scheduled(cron ="0 0 4 * * ?")//每天凌晨4点开始进行推荐
 	public void recomScheduled(){
+		/*将原数据库的评分表更新到推荐模块数据库评分表*/
+		CopyRate();
 		System.out.println("开始推荐更新");
+		/*训练模型*/
 		final PMFModelTrain recom = new PMFModelTrain(recomCourseDao, featureCount, regularizer, maxIt);
 		recom.bulidModel();
 		if(recom.isTrainFinish){
@@ -57,18 +60,17 @@ public class RecomCourseService {
 			final Date now = new Date();
 			System.out.println("totalUserPage " + totalUserPage);
 			System.out.println("pageSize " + pageSize);
-			System.out.println("now " + now);
 			ExecutorService pool = Executors.newFixedThreadPool(10);//创建线程池
 			final RecomCourseDao db = recomCourseDao;
 			for (int page = 1; page <= totalUserPage; page++) {
 				List<Integer> users = recomCourseDao.getUsersByBatch(page, pageSize);
-				System.out.println(users.size());
 				for (int i = 0; i < users.size(); i++) {
 					final int userId = users.get(i);
 					pool.submit(new Runnable() {
 						@Override
 						public void run() {
 							try {
+								//通过训练模型得出推荐结果
 								String recomItems = recom.recomItemIds(userId, topK);
                                 /*将推荐结果写入单独的recom数据库*/
 								DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_recom);
@@ -94,7 +96,26 @@ public class RecomCourseService {
 			 System.out.println("all thread complete");
 		}
 	}
-	
+
+	public void CopyRate(){
+		int totalRatePage = 1;
+		int totalRateCount = recomCourseDao.getRateSize();
+		int pageSize = 1000;
+
+		if(totalRateCount > pageSize){
+			totalRatePage = totalRateCount%pageSize==0?totalRateCount/pageSize:totalRateCount/pageSize+1;
+		}
+		/*批量插入用户评分数据*/
+			for (int page = 1; page <= totalRatePage; page++) {
+				List<UserRate> rates = recomCourseDao.getUserRateTimeByBatch(page, pageSize);
+				/*将推荐结果写入单独的recom数据库*/
+				DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_recom);
+				recomCourseDao.insertUserRateByBatch(rates);
+				/*转换成原来的数据源*/
+				DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_cernet);
+			}
+	}
+
 	public UserRecom getUserRecom(int userId){
 		DatabaseContextHolder.setDatabaseType(DatabaseType.iteach_recom);
 		UserRecom userRecom = recomCourseDao.getUserRecom(userId);

@@ -24,7 +24,7 @@ public class RecomCourseDao {
 	public void setSqlSession(SqlSession sqlSession) {
 		this.sqlSession = sqlSession;
 	}
-	
+
 	public int getUserCount(){
 		return (Integer)sqlSession.selectOne("recom.queryUserCount");
 	}
@@ -52,17 +52,23 @@ public class RecomCourseDao {
 		map.put("pageSize", pageSize);
 		return sqlSession.selectList("recom.getUserRateByBatch", map);
 	}
+	public List<UserRate> getUserRateTimeByBatch(int page, int pageSize){
+		Map<String,Object> map = new HashMap<String,Object>();
+		map.put("startIndex", (page-1)*pageSize);
+		map.put("pageSize", pageSize);
+		return sqlSession.selectList("recom.getUserRateTimeByBatch", map);
+	}
 	public List<Integer> getUserRateItemIds(int userId){
 		return sqlSession.selectList("recom.getUserRateItemIds", userId);
 	}
 	public double getMeanRate(){
 		return (Double)sqlSession.selectOne("recom.getMeanRate");
 	}
-	
+
 	public UserRecom getUserRecom(int userId) {
 		return sqlSession.selectOne("recom.getUserRecom", userId);
 	}
-	
+
 	public UserRate getUserCourseRate(int userId,int courseId){
 		Map<String,Object> map = new HashMap<String,Object>();
 		map.put("userId", userId);
@@ -76,7 +82,6 @@ public class RecomCourseDao {
 		map.put("rate", rate);
 		return sqlSession.insert("recom.insertUserRate", map);
 	}
-	
 	public int updateUserRecomItems(List<UserRecom> recomList) {
 		return sqlSession.insert("recom.updateUserRecomItems", recomList);
 	}
@@ -99,14 +104,12 @@ public class RecomCourseDao {
 			return this.insertUserRate(userId, courseId, score);
 		}
 	}
-
 	public int insertUserRateByBatch(List<UserRate> userRateList) {
 		return sqlSession.insert("recom.insertUserRateByBatch", userRateList);
 	}
-
 	/**
 	 * 获得选课最多的几门课程
-	 * @param i
+	 * @param
 	 * @return
 	 */
 	public List<Integer> getTopKSelectCourse(Integer N) {

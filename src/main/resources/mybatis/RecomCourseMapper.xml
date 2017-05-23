@@ -14,12 +14,17 @@
 		select user_id from User limit #{startIndex},#{pageSize}
 	</select>
 	<select id="getCoursesByBatch" parameterType="hashMap"
-		resultType="Integer">
+			resultType="Integer">
 		select cour_id from Course limit #{startIndex},#{pageSize}
 	</select>
 	<select id="getUserRateByBatch" parameterType="hashMap"
-		resultType="com.recom.domain.UserRate">
+			resultType="com.recom.domain.UserRate">
 		select user as user,course as course,rate as rate from user_rate limit
+		#{startIndex},#{pageSize}
+	</select>
+	<select id="getUserRateTimeByBatch" parameterType="hashMap"
+			resultType="com.recom.domain.UserRate">
+		select user as user,course as course,rate as rate,time as time from user_rate limit
 		#{startIndex},#{pageSize}
 	</select>
 	<select id="getUserRateItemIds" parameterType="int" resultType="Integer">
@@ -29,20 +34,20 @@
 		select avg(rate) from user_rate
 	</select>
 	<select id="getUserRecom" resultType="com.recom.domain.UserRecom"
-		parameterType="int">
+			parameterType="int">
 		select user as user,time as time,recom as recom from user_recom where
 		user=#{userId}
 	</select>
 	<select id="getTopKSelectCourse" resultType="Integer" parameterType="int">
 		select rsco_cour_id from Re_SelectCource GROUP BY rsco_cour_id ORDER BY COUNT(rsco_user_id) DESC limit #{N};
 	</select>
-	
+
 	<select id="selectUserCourseRate" parameterType="hashMap" resultType="com.recom.domain.UserRate">
 		select user as user,course as course,rate as rate from user_rate where user=#{userId} and course=#{courseId}
 	</select>
 	<insert id="insertUserRate" parameterType="hashMap" >
-		insert into user_rate(user,course,rate)
-		values(#{userId},#{courseId},#{rate})
+		insert into user_rate(user,course,rate，time)
+		values(#{userId},#{courseId},#{rate},getdate())
 	</insert>
 	<insert id="insertUserRateByBatch" parameterType="java.util.List">
 		replace into user_rate(user,course,rate,time) values
@@ -55,8 +60,7 @@
 		update user_rate set rate=(rate+#{rate})/2 where user=#{userId} and
 		course=#{courseId}
 	</update>
-	
-	
+
 	<insert id="replaceIntoUserRecom" parameterType="hashMap">
 		replace into user_recom(user,time,recom)
 		values(#{userId},#{time},#{recom,jdbcType=VARCHAR})
