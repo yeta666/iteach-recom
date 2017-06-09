@@ -1,6 +1,6 @@
 server:
   port: 8082
-  context-path: /recom
+  context-path: /course_recommend
 spring:
   datasource1:
     username: root
@@ -13,3 +13,6 @@ spring:
       password: root
       url: jdbc:mysql://localhost:3306/iteach_recom?useUnicode\=true&characterEncoding\=utf-8&amp;characterSetResults=UTF-8&amp;zeroDateTimeBehavior=convertToNull
       driver-class-name: com.mysql.jdbc.Driver
+
+#自定义配置
+CHECK_TOKEN_URI: http://localhost:8083/oauth/check_token

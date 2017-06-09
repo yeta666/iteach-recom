@@ -23,7 +23,7 @@ public class RecomCourseController {
 	@Autowired
 	private RecomCourseService recomCourseService;
 	
-	@RequestMapping(value="/courseRecom",method = RequestMethod.POST)
+	@RequestMapping(value="/recom", method = RequestMethod.POST)
 	@ResponseBody
 	public JsonAndView courseReom(HttpServletRequest request,
 								  HttpServletResponse respons,

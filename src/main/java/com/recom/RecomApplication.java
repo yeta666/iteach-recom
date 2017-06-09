@@ -5,21 +5,25 @@ import com.recom.utils.DynamicDataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.env.Environment;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
+import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
 import org.springframework.transaction.PlatformTransactionManager;
-
-import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +31,31 @@ import java.util.Map;
 @EnableAutoConfiguration
 @ComponentScan
 @MapperScan("com.recom.dao")
-public class RecomApplication {
+@Configuration
+@EnableResourceServer
+public class RecomApplication extends ResourceServerConfigurerAdapter {
+
+	@Value("${CHECK_TOKEN_URI}")
+	private String CHECK_TOKEN_URI;
+
+	// 调用远程Auth server进行token校验
+	@Bean
+	public RemoteTokenServices remoteTokenServices() {
+		RemoteTokenServices remoteTokenServices = new RemoteTokenServices();
+		remoteTokenServices.setCheckTokenEndpointUrl(CHECK_TOKEN_URI);
+		return remoteTokenServices;
+	}
+
+	@Override
+	public void configure(HttpSecurity http) throws Exception {
+		//设置拦截的路径，需要验证access_token才能访问
+		http.authorizeRequests().antMatchers(HttpMethod.POST, "/recom").authenticated();
+	}
+
+	@Override
+	public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
+		resources.resourceId("course_recommend_service");
+	}
 
 	//配置dataSource
 	@Bean
